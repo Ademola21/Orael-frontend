@@ -26,11 +26,11 @@ let wheelRot = 0;
 let spinning = false;
 
 /**
- * Build the inline wheel SVG — HD premium realistic design.
- * Deep navy segments with subtle gradient, brushed gold rim, embossed
- * prize labels, and metallic divider lines. Prize values come from the
- * server economy config so the displayed wheel always matches what the
- * server will actually pay. Called on boot.
+ * Build the inline wheel SVG — unique premium multi-color design.
+ * Each segment has its own distinct color (sapphire, copper, deep teal,
+ * burgundy, etc.) with radial gradient shading for a 3D domed look.
+ * Copper rim with minted edge texture. Custom Orael-branded aesthetic.
+ * Called on boot.
  */
 export function buildWheel() {
   const svg = $('wheel');
@@ -41,30 +41,54 @@ export function buildWheel() {
   const seg = 360 / n;
   const cx = 100, cy = 100, r = 92;
 
-  // Deep navy segment colors — alternating for contrast, not too shiny
-  const fills = ['#111827', '#1e293b']; // dark slate → slate
+  // Unique color palette — each segment gets its own distinct color
+  // Premium jewel tones: deep sapphire, copper, teal, burgundy, forest, plum, amber, charcoal
+  const segmentColors = [
+    { fill: '#1e3a5f', light: '#2e5a8f', label: '#fde68a' },  // deep sapphire
+    { fill: '#7c2d12', light: '#b45309', label: '#fde68a' },  // copper
+    { fill: '#0f4a3f', light: '#1a6b5a', label: '#fde68a' },  // deep teal
+    { fill: '#3b1a3b', light: '#5c2a5c', label: '#94a3b8' },  // deep plum (MISS)
+    { fill: '#1e3a5f', light: '#2e5a8f', label: '#fde68a' },  // deep sapphire
+    { fill: '#7c2d12', light: '#b45309', label: '#fde68a' },  // copper
+    { fill: '#4a1a1a', light: '#7c2a2a', label: '#fbbf24' },  // burgundy (jackpot)
+    { fill: '#0f4a3f', light: '#1a6b5a', label: '#fde68a' },  // deep teal
+  ];
 
   let html = '';
 
-  // ── Defs: gradients for the metallic gold rim ──────────────────
+  // ── Defs: gradients ────────────────────────────────────────────
+  // Copper rim gradient (brushed metal look)
   html += `<defs>
-    <linearGradient id="goldRimGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#92400e"/>
-      <stop offset="0.3" stop-color="#fbbf24"/>
+    <linearGradient id="copperRim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5c2a0c"/>
+      <stop offset="0.25" stop-color="#e0a25b"/>
       <stop offset="0.5" stop-color="#fde68a"/>
-      <stop offset="0.7" stop-color="#fbbf24"/>
-      <stop offset="1" stop-color="#92400e"/>
-    </linearGradient>
-    <radialGradient id="segShine" cx="0.5" cy="0.35" r="0.6">
-      <stop offset="0" stop-color="rgba(255,255,255,0.08)"/>
-      <stop offset="0.7" stop-color="rgba(255,255,255,0)"/>
-      <stop offset="1" stop-color="rgba(0,0,0,0.25)"/>
-    </radialGradient>
+      <stop offset="0.75" stop-color="#e0a25b"/>
+      <stop offset="1" stop-color="#5c2a0c"/>
+    </linearGradient>`;
+
+  // Radial gradient for each segment (3D domed effect)
+  for (let i = 0; i < n; i++) {
+    const c = segmentColors[i % segmentColors.length];
+    html += `<radialGradient id="seg${i}" cx="0.5" cy="0.35" r="0.7">
+      <stop offset="0" stop-color="${c.light}"/>
+      <stop offset="0.6" stop-color="${c.fill}"/>
+      <stop offset="1" stop-color="${c.fill}" stop-opacity="0.85"/>
+    </radialGradient>`;
+  }
+
+  // Inner shine overlay (subtle, not glossy)
+  html += `<radialGradient id="wheelShine" cx="0.5" cy="0.3" r="0.5">
+    <stop offset="0" stop-color="rgba(255,255,255,0.10)"/>
+    <stop offset="0.6" stop-color="rgba(255,255,255,0)"/>
+    <stop offset="1" stop-color="rgba(0,0,0,0.3)"/>
+  </radialGradient>
   </defs>`;
 
-  // ── Outer metallic gold rim (thick, brushed) ───────────────────
-  html += `<circle cx="${cx}" cy="${cy}" r="${r + 5}" fill="none" stroke="url(#goldRimGrad)" stroke-width="6"/>`;
-  html += `<circle cx="${cx}" cy="${cy}" r="${r + 2}" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="1"/>`;
+  // ── Outer copper rim (thick, brushed) ──────────────────────────
+  html += `<circle cx="${cx}" cy="${cy}" r="${r + 6}" fill="none" stroke="url(#copperRim)" stroke-width="7"/>`;
+  // Dark inner edge of rim (depth)
+  html += `<circle cx="${cx}" cy="${cy}" r="${r + 2}" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/>`;
 
   // ── Segments ───────────────────────────────────────────────────
   for (let i = 0; i < n; i++) {
@@ -73,52 +97,56 @@ export function buildWheel() {
     const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
     const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
 
-    // Segment fill — deep navy, alternating shades
-    html += `<path d="M${cx},${cy} L${x0},${y0} A${r},${r} 0 0 1 ${x1},${y1} Z" fill="${fills[i % 2]}" stroke="rgba(251,191,36,0.15)" stroke-width="0.5"/>`;
+    // Segment with radial gradient fill (3D domed look)
+    html += `<path d="M${cx},${cy} L${x0},${y0} A${r},${r} 0 0 1 ${x1},${y1} Z" fill="url(#seg${i})"/>`;
 
-    // Subtle radial shine overlay on each segment (3D dome effect)
-    html += `<path d="M${cx},${cy} L${x0},${y0} A${r},${r} 0 0 1 ${x1},${y1} Z" fill="url(#segShine)" pointer-events="none"/>`;
-
-    // Divider line from center to edge (embossed gold)
-    html += `<line x1="${cx}" y1="${cy}" x2="${x0}" y2="${y0}" stroke="rgba(251,191,36,0.2)" stroke-width="0.5"/>`;
+    // Divider line — copper, embossed
+    html += `<line x1="${cx}" y1="${cy}" x2="${x0}" y2="${y0}" stroke="#e0a25b" stroke-width="0.8" opacity="0.4"/>`;
 
     // Label
     const am = (a0 + a1) / 2;
-    const tx = cx + r * 0.62 * Math.cos(am);
-    const ty = cy + r * 0.62 * Math.sin(am);
+    const tx = cx + r * 0.63 * Math.cos(am);
+    const ty = cy + r * 0.63 * Math.sin(am);
     const rot = (i * seg) + (seg / 2);
-    const big = prizes[i] >= 300;
-    const label = prizes[i] === 0 ? 'MISS' : prizes[i];
+    const prize = prizes[i];
+    const big = prize >= 300;
+    const label = prize === 0 ? 'MISS' : prize;
 
-    // Premium text styling — gold for jackpots, soft amber for regular, muted gray for MISS
-    let color, fontSize, fontWeight;
-    if (prizes[i] === 0) {
-      color = '#64748b'; fontSize = 11; fontWeight = 600;
+    // Text styling — white/cream for readability on colored segments
+    let labelColor, fontSize, fontWeight;
+    if (prize === 0) {
+      labelColor = '#94a3b8'; fontSize = 11; fontWeight = 600;
     } else if (big) {
-      color = '#fbbf24'; fontSize = 15; fontWeight = 800;
+      labelColor = '#fbbf24'; fontSize = 15; fontWeight = 800;
     } else {
-      color = '#fde68a'; fontSize = 13; fontWeight = 700;
+      labelColor = '#fde68a'; fontSize = 13; fontWeight = 700;
     }
 
-    html += `<text x="${tx}" y="${ty}" fill="${color}" font-size="${fontSize}" font-family="Space Grotesk" font-weight="${fontWeight}" text-anchor="middle" dominant-baseline="middle" transform="rotate(${rot} ${tx} ${ty})" style="letter-spacing:0.02em">${label}</text>`;
+    html += `<text x="${tx}" y="${ty}" fill="${labelColor}" font-size="${fontSize}" font-family="Space Grotesk" font-weight="${fontWeight}" text-anchor="middle" dominant-baseline="middle" transform="rotate(${rot} ${tx} ${ty})" style="letter-spacing:0.03em; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6))">${label}</text>`;
 
-    // Small decorative dot near the outer edge for premium feel
-    const dx = cx + r * 0.87 * Math.cos(am);
-    const dy = cy + r * 0.87 * Math.sin(am);
-    if (prizes[i] >= 100) {
-      html += `<circle cx="${dx}" cy="${dy}" r="1.4" fill="#fbbf24" opacity="0.7"/>`;
-    } else if (prizes[i] > 0) {
-      html += `<circle cx="${dx}" cy="${dy}" r="1" fill="#92400e" opacity="0.5"/>`;
+    // Decorative dots near the outer edge
+    const dx = cx + r * 0.86 * Math.cos(am);
+    const dy = cy + r * 0.86 * Math.sin(am);
+    if (prize >= 300) {
+      // Jackpot — gold star dot
+      html += `<circle cx="${dx}" cy="${dy}" r="2" fill="#fbbf24" opacity="0.9"/>`;
+    } else if (prize >= 100) {
+      html += `<circle cx="${dx}" cy="${dy}" r="1.5" fill="#fde68a" opacity="0.7"/>`;
+    } else if (prize > 0) {
+      html += `<circle cx="${dx}" cy="${dy}" r="1" fill="#e0a25b" opacity="0.5"/>`;
     }
   }
 
-  // ── Inner ring (dark recess between segments and hub) ──────────
-  html += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="2"/>`;
-  html += `<circle cx="${cx}" cy="${cy}" r="${r - 1}" fill="none" stroke="rgba(251,191,36,0.12)" stroke-width="0.5"/>`;
+  // ── Top shine overlay (3D dome across entire wheel) ────────────
+  html += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#wheelShine)" pointer-events="none"/>`;
+
+  // ── Inner dark ring (recess before hub) ────────────────────────
+  html += `<circle cx="${cx}" cy="${cy}" r="24" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="2"/>`;
+  html += `<circle cx="${cx}" cy="${cy}" r="23" fill="none" stroke="#e0a25b" stroke-width="0.5" opacity="0.3"/>`;
 
   svg.innerHTML = html;
 
-  // Build the gold stud bezel ring (16 dots) on the inline wheel
+  // Build the copper stud bezel ring (16 dots) on the inline wheel
   const bezel = document.querySelector('.wheel-bezel');
   if (bezel && bezel.innerHTML === '') {
     let dots = '';

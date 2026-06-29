@@ -30,15 +30,15 @@
   /* No CSS transition — animation handled by requestAnimationFrame in play.js */
   filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
 }
-/* Decorative stud ring around the wheel (matte gold dots, not glowing) */
+/* Decorative stud ring around the wheel (copper dots, not glowing) */
 .wheel-bezel {
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   border-radius: 50%;
 }
 .wheel-bezel i {
   position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; margin: -2px;
-  border-radius: 50%; background: #d97706;
-  box-shadow: 0 0 3px rgba(217, 119, 6, 0.4);
+  border-radius: 50%; background: #e0a25b;
+  box-shadow: 0 0 3px rgba(224, 162, 91, 0.4);
 }
 .wheel-pointer {
   position: absolute; top: -6px; left: 50%; transform: translateX(-50%); z-index: 4;
@@ -48,22 +48,29 @@
 .wheel-pointer svg { width: 100%; height: 100%; }
 .wheel-hub {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3;
-  width: 64px; height: 64px; border-radius: 50%;
-  background: radial-gradient(circle at 38% 32%, #1e293b, #0f172a);
-  border: 2px solid #92400e; display: grid; place-items: center;
-  font-family: var(--font-display); font-weight: 700; font-size: 11px; color: #fbbf24;
-  letter-spacing: 0.08em; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.04);
+  width: 60px; height: 60px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #1e3a5f, #0a1628);
+  border: 2px solid #e0a25b; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 11px; color: #e0a25b;
+  letter-spacing: 0.08em;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(96, 165, 250, 0.15),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
   cursor: pointer; user-select: none;
   transition: transform 0.15s, box-shadow 0.15s;
 }
 .wheel-hub:hover {
   transform: translate(-50%, -50%) scale(1.05);
-  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.25), inset 0 1px 0 rgba(255,255,255,0.08);
+  box-shadow:
+    0 6px 16px rgba(224, 162, 91, 0.3),
+    inset 0 1px 0 rgba(96, 165, 250, 0.2),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
 }
 .wheel-hub:active { transform: translate(-50%, -50%) scale(0.96); }
 .wheel-hub::after {
   content: ""; position: absolute; inset: 4px; border-radius: 50%;
-  border: 1px solid rgba(217, 119, 6, 0.25);
+  border: 1px solid rgba(224, 162, 91, 0.3);
   pointer-events: none;
 }
 
@@ -145,47 +152,53 @@
 .lb-me { background: var(--gold-glow); border-radius: 12px; padding-left: 8px; padding-right: 8px; }
 
 /* =========================================================================
-   COIN FLIP — true 3D coin with two faces
+   COIN FLIP — custom Orael token (sapphire face + copper rim)
    ========================================================================= */
 .coinflip-stage { display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 16px; }
-/* Extra height + overflow visible so the coin can fly up during the toss */
 .cf-scene {
   width: 130px; height: 130px; perspective: 700px;
   position: relative;
-  /* Make sure the coin isn't clipped when it flies up */
   overflow: visible;
 }
 .cf-coin {
   position: relative; width: 100%; height: 100%; transform-style: preserve-3d;
   transform: rotateY(0deg);
-  /* No CSS transition — animation is handled by requestAnimationFrame
-     in play.js flipCoin() for reliable full-duration rotation. */
-  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.55));
-  /* transform-origin at bottom so the coin "launches" from the ground */
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.5));
   transform-origin: center bottom;
 }
 .cf-face {
   position: absolute; inset: 0; border-radius: 50%; backface-visibility: hidden;
   display: grid; place-items: center;
+  /* Deep sapphire face with subtle radial highlight — custom Orael token */
   background:
-    radial-gradient(circle at 35% 28%, #fde68a, #fbbf24 40%, #d97706 100%);
-  border: 3px solid #b45309;
-  box-shadow: inset 0 2px 6px rgba(255,255,255,0.35), inset 0 -6px 12px rgba(120,53,15,0.5);
+    radial-gradient(circle at 35% 30%, #1e3a5f 0%, #0f1f3a 45%, #0a1628 100%);
+  border: 3px solid #92400e;
+  box-shadow:
+    inset 0 2px 4px rgba(96, 165, 250, 0.15),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(224, 162, 91, 0.2);
 }
 .cf-face .cf-glyph {
-  font-family: var(--font-display); font-weight: 700; font-size: 30px; color: #7c2d12;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+  font-family: var(--font-display); font-weight: 700; font-size: 30px;
+  color: #e0a25b;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   display: flex; flex-direction: column; align-items: center; gap: 2px;
 }
-.cf-face .cf-glyph small { font-size: 9px; letter-spacing: 0.18em; opacity: 0.8; }
+.cf-face .cf-glyph small {
+  font-size: 9px; letter-spacing: 0.18em; opacity: 0.7;
+  color: #e0a25b;
+}
 .cf-face.cf-front .cf-glyph svg { width: 30px; height: 30px; }
 .cf-face.cf-back { transform: rotateY(180deg); }
 .cf-rim {
   position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
-  background: conic-gradient(from 0deg, #b45309, #fbbf24, #b45309, #fbbf24, #b45309, #fbbf24, #b45309, #fbbf24, #b45309);
+  /* Copper rim with alternating light/dark for a minted-token look */
+  background: conic-gradient(from 0deg,
+    #92400e, #e0a25b, #92400e, #e0a25b, #92400e, #e0a25b,
+    #92400e, #e0a25b, #92400e, #e0a25b, #92400e, #e0a25b, #92400e);
   -webkit-mask: radial-gradient(circle, transparent 62%, #000 63%, #000 68%, transparent 69%);
           mask: radial-gradient(circle, transparent 62%, #000 63%, #000 68%, transparent 69%);
-  opacity: 0.6;
+  opacity: 0.8;
 }
 .coinflip-result {
   font-family: var(--font-display); font-weight: 600; font-size: 14px;
