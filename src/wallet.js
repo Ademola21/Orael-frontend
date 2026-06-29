@@ -973,45 +973,45 @@ function showTransactionDetails(tx) {
   }
   const veil = $('txDetailsVeil');
   const content = $('txDetailsContent');
-  if (!veil) {
+  if (!veil || !content) {
     toast({ title: 'Error', message: 'Modal not available', variant: 'error' });
-    return;
-  }
-  if (!content) {
-    toast({ title: 'Error', message: 'Modal content missing', variant: 'error' });
     return;
   }
 
   const isNeg = tx.amount < 0;
   const typeText = tx.type.toUpperCase().replace(/_/g, ' ');
+
+  // Copy button SVG (reusable)
+  const copyIcon = `<svg viewBox="0 0 24 24" fill="none" style="width:14px;height:14px;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+
+  // Build the clean two-column detail rows (matching the reference design)
   let detailsHtml = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-      <span style="color:var(--ink-mute);">Transaction ID:</span>
-      <span style="display:flex; align-items:center; gap:6px;">
-        <b style="font-family:var(--font-mono); color:var(--gold-1);">#${tx.id}</b>
-        <button class="copy-btn" data-copy="${tx.id}" style="background:none; border:none; padding:4px; color:var(--ink-mute); cursor:pointer; display:flex; align-items:center; outline:none;" aria-label="Copy Transaction ID">
-          <svg viewBox="0 0 24 24" fill="none" style="width:14px; height:14px; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        </button>
+    <div class="tx-detail-row">
+      <span class="tx-detail-label">Transaction ID</span>
+      <span class="tx-detail-value">
+        <b style="font-family:var(--font-mono);color:var(--gold-1);">#${tx.id}</b>
+        <button class="tx-copy-btn" data-copy="${tx.id}" aria-label="Copy Transaction ID">${copyIcon}</button>
       </span>
     </div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-      <span style="color:var(--ink-mute);">Type:</span>
-      <b style="color:var(--ink);">${typeText}</b>
+    <div class="tx-detail-row">
+      <span class="tx-detail-label">Type</span>
+      <b class="tx-detail-value">${typeText}</b>
     </div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-      <span style="color:var(--ink-mute);">Amount:</span>
-      <b style="font-family:var(--font-mono); color:${isNeg ? 'var(--ink-mute)' : 'var(--emerald)'};">${isNeg ? '' : '+'}${fmtInt(tx.amount)} ORL</b>
+    <div class="tx-detail-row">
+      <span class="tx-detail-label">Amount</span>
+      <b class="tx-detail-value" style="font-family:var(--font-mono);color:${isNeg ? 'var(--ink-mute)' : 'var(--emerald)'};">${isNeg ? '' : '+'}${fmtInt(tx.amount)} ORL</b>
     </div>
-    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-      <span style="color:var(--ink-mute);">Date:</span>
-      <b style="color:var(--ink);">${new Date(tx.created_at).toLocaleString()}</b>
+    <div class="tx-detail-row">
+      <span class="tx-detail-label">Date</span>
+      <b class="tx-detail-value">${new Date(tx.created_at).toLocaleString()}</b>
     </div>
-    <div style="margin-bottom:8px; margin-top:8px;">
-      <div style="color:var(--ink-mute); margin-bottom:2px;">Description:</div>
-      <div style="font-weight:600; line-height:1.4; color:var(--ink);">${tx.description || 'N/A'}</div>
+    <div class="tx-detail-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <span class="tx-detail-label">Description</span>
+      <div style="font-weight:600;line-height:1.4;color:var(--ink);width:100%;">${tx.description || 'N/A'}</div>
     </div>
   `;
 
+  // Add withdrawal tracking section for withdrawal transactions
   if (tx.withdrawal_status || tx.withdrawal_id || tx.type === 'withdraw' || tx.type === 'withdraw_completed' || tx.type === 'withdraw_refund') {
     const status = tx.withdrawal_status || 'pending';
     let statusText = 'Processing';
@@ -1028,65 +1028,63 @@ function showTransactionDetails(tx) {
     }
 
     detailsHtml += `
-      <hr style="border:0; border-top:1px solid var(--line); margin:12px 0;" />
-      <div style="font-weight:700; margin-bottom:10px; color:var(--gold-1);">WITHDRAWAL TRACKING</div>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span style="color:var(--ink-mute);">Withdrawal ID:</span>
-        <span style="display:flex; align-items:center; gap:6px;">
-          <b style="font-family:var(--font-mono); color:var(--ink);">#${tx.withdrawal_id || 'N/A'}</b>
-          ${tx.withdrawal_id ? `<button class="copy-btn" data-copy="${tx.withdrawal_id}" style="background:none; border:none; padding:4px; color:var(--ink-mute); cursor:pointer; display:flex; align-items:center; outline:none;" aria-label="Copy Withdrawal ID"><svg viewBox="0 0 24 24" fill="none" style="width:14px; height:14px; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>` : ''}
+      <div class="tx-detail-divider"></div>
+      <div class="tx-detail-section-title">Withdrawal Tracking</div>
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">Withdrawal ID</span>
+        <span class="tx-detail-value">
+          <b style="font-family:var(--font-mono);color:var(--ink);">#${tx.withdrawal_id || 'N/A'}</b>
+          ${tx.withdrawal_id ? `<button class="tx-copy-btn" data-copy="${tx.withdrawal_id}" aria-label="Copy Withdrawal ID">${copyIcon}</button>` : ''}
         </span>
       </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-        <span style="color:var(--ink-mute);">Status:</span>
-        <b style="color:${statusColor};">${statusText}</b>
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">Status</span>
+        <b class="tx-detail-value" style="color:${statusColor};">${statusText}</b>
       </div>
     `;
 
     if (tx.flw_reference) {
       detailsHtml += `
-        <div style="margin-bottom:8px;">
-          <div style="color:var(--ink-mute); margin-bottom:2px; display:flex; justify-content:space-between; align-items:center;">
-            <span>Flutterwave Payout Ref:</span>
-            <button class="copy-btn" data-copy="${tx.flw_reference}" style="background:none; border:none; padding:4px; color:var(--ink-mute); cursor:pointer; display:flex; align-items:center; outline:none;" aria-label="Copy Payout Reference">
-              <svg viewBox="0 0 24 24" fill="none" style="width:14px; height:14px; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
-          </div>
-          <div style="font-family:var(--font-mono); font-size:11.5px; word-break:break-all; font-weight:600; color:var(--gold-1);">${tx.flw_reference}</div>
+        <div class="tx-detail-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <span class="tx-detail-label" style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+            <span>Flutterwave Payout Ref</span>
+            <button class="tx-copy-btn" data-copy="${tx.flw_reference}" aria-label="Copy Payout Reference">${copyIcon}</button>
+          </span>
+          <div style="font-family:var(--font-mono);font-size:11.5px;word-break:break-all;font-weight:600;color:var(--gold-1);width:100%;">${tx.flw_reference}</div>
         </div>
       `;
     }
 
     if (tx.net_fiat) {
       detailsHtml += `
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-          <span style="color:var(--ink-mute);">Net Payout Value:</span>
-          <b style="color:var(--emerald);">${tx.net_fiat}</b>
+        <div class="tx-detail-row">
+          <span class="tx-detail-label">Net Payout Value</span>
+          <b class="tx-detail-value" style="color:var(--emerald);">${tx.net_fiat}</b>
         </div>
       `;
     }
 
     if (tx.fee_orl !== undefined && tx.fee_orl !== null) {
       detailsHtml += `
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-          <span style="color:var(--ink-mute);">Processing Fee:</span>
-          <b style="font-family:var(--font-mono); color:var(--ink);">${fmtInt(tx.fee_orl)} ORL</b>
+        <div class="tx-detail-row">
+          <span class="tx-detail-label">Processing Fee</span>
+          <b class="tx-detail-value" style="font-family:var(--font-mono);">${fmtInt(tx.fee_orl)} ORL</b>
         </div>
       `;
     }
 
     if (tx.wallet_info) {
       detailsHtml += `
-        <div style="margin-bottom:8px;">
-          <div style="color:var(--ink-mute); margin-bottom:2px;">Payout Destination:</div>
-          <div style="font-weight:600; font-size:12px; word-break:break-all; color:var(--ink);">${tx.wallet_info.replace(/\|/g, ' • ')}</div>
+        <div class="tx-detail-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <span class="tx-detail-label">Payout Destination</span>
+          <div style="font-weight:600;font-size:12px;word-break:break-all;color:var(--ink);width:100%;">${tx.wallet_info.replace(/\|/g, ' • ')}</div>
         </div>
       `;
     }
 
     if ((status === 'failed' || status === 'rejected') && tx.failure_reason) {
       detailsHtml += `
-        <div style="margin-top:8px; padding:8px; border-radius:6px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); color:var(--ruby); line-height:1.4;">
+        <div style="margin-top:10px;padding:10px;border-radius:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:var(--ruby);line-height:1.4;font-size:12px;">
           <b>Failure Reason:</b> ${tx.failure_reason}
         </div>
       `;
@@ -1096,7 +1094,7 @@ function showTransactionDetails(tx) {
   content.innerHTML = detailsHtml;
 
   // Bind copy events
-  content.querySelectorAll('.copy-btn').forEach(btn => {
+  content.querySelectorAll('.tx-copy-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       haptic('light');

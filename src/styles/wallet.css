@@ -119,3 +119,54 @@
   background: rgba(224, 162, 91, 0.08);
   border-color: var(--gold-2);
 }
+
+/* ── Transaction detail modal ───────────────────────────────────── */
+.tx-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  gap: 12px;
+}
+.tx-detail-row:last-child { border-bottom: none; }
+.tx-detail-label {
+  font-size: 12.5px;
+  color: var(--ink-mute);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+.tx-detail-value {
+  font-size: 12.5px;
+  color: var(--ink);
+  font-weight: 600;
+  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tx-copy-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  color: var(--ink-mute);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.tx-copy-btn:hover { color: var(--gold-1); background: rgba(251, 191, 36, 0.08); }
+.tx-detail-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 14px 0 10px;
+}
+.tx-detail-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-1);
+  margin-bottom: 8px;
+}
