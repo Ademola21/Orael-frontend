@@ -980,10 +980,10 @@ function showTransactionDetails(tx) {
 
   const isNeg = tx.amount < 0;
   const typeText = tx.type.toUpperCase().replace(/_/g, ' ');
-  const amountClass = isNeg ? 'negative' : 'positive';
   const amountSign = isNeg ? '' : '+';
+  const amountColor = isNeg ? 'var(--ink)' : 'var(--emerald)';
 
-  // Copy button SVG (reusable, smaller and cleaner)
+  // Copy button SVG
   const copyIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
 
   // Helper: build a field row (label on top, value below)
@@ -1005,16 +1005,20 @@ function showTransactionDetails(tx) {
     </div>
   `;
 
-  // Build detail fields
-  const amountColor = isNeg ? 'var(--ink)' : 'var(--emerald)';
+  // Build detail fields — flat list, no separate "Withdrawal Tracking" section
   let html = fieldWithCopy('Transaction ID', `#${tx.id}`, tx.id, 'id');
   html += field('Type', typeText);
   html += field('Amount', `<span style="color:${amountColor};font-family:var(--font-mono);">${amountSign}${fmtInt(tx.amount)} ORL</span>`);
   html += field('Date', new Date(tx.created_at).toLocaleString());
   html += field('Description', tx.description || 'N/A');
 
-  // Add withdrawal tracking section for withdrawal transactions
-  if (tx.withdrawal_status || tx.withdrawal_id || tx.type === 'withdraw' || tx.type === 'withdraw_completed' || tx.type === 'withdraw_refund') {
+  // For withdrawal transactions, show status + payout details inline
+  // (no separate "Withdrawal Tracking" section — the Transaction ID is the
+  // main reference; admins can search by it in the admin panel where the
+  // Flutterwave reference is also visible)
+  if (tx.type === 'withdraw' || tx.type === 'withdraw_completed' || tx.type === 'withdraw_refund' ||
+      tx.withdrawal_status || tx.withdrawal_id) {
+
     const status = tx.withdrawal_status || 'pending';
     let statusText = 'Processing';
     let badgeClass = 'pending';
@@ -1028,25 +1032,15 @@ function showTransactionDetails(tx) {
       statusText = 'Awaiting Approval';
       badgeClass = 'approval';
     }
-
-    html += `<div class="tx-section"><div class="tx-section-title">Withdrawal Tracking</div>`;
-
-    if (tx.withdrawal_id) {
-      html += fieldWithCopy('Withdrawal ID', `#${tx.withdrawal_id}`, tx.withdrawal_id, 'mono');
-    }
     html += field('Status', `<span class="tx-status-badge ${badgeClass}">${statusText}</span>`);
 
-    if (tx.flw_reference) {
-      html += fieldWithCopy('Flutterwave Payout Ref', tx.flw_reference, tx.flw_reference, 'mono');
-    }
     if (tx.net_fiat) {
       html += field('Net Payout', `<span style="color:var(--emerald);font-family:var(--font-mono);">${tx.net_fiat}</span>`);
     }
     if (tx.fee_orl !== undefined && tx.fee_orl !== null) {
-      html += field('Processing Fee', `${fmtInt(tx.fee_orl)} ORL`, 'mono');
+      html += field('Processing Fee', `<span style="font-family:var(--font-mono);">${fmtInt(tx.fee_orl)} ORL</span>`);
     }
     if (tx.wallet_info) {
-      // Format the wallet info nicely — split bank|account|name|bankname into lines
       const parts = tx.wallet_info.split('|');
       let destHtml;
       if (parts.length >= 4) {
@@ -1064,8 +1058,6 @@ function showTransactionDetails(tx) {
     if ((status === 'failed' || status === 'rejected') && tx.failure_reason) {
       html += `<div class="tx-failure-box"><b>Failure Reason:</b> ${tx.failure_reason}</div>`;
     }
-
-    html += `</div>`; // close .tx-section
   }
 
   content.innerHTML = html;
@@ -1084,6 +1076,8 @@ function showTransactionDetails(tx) {
     });
   });
 
+  // Scroll content to top on open
+  content.scrollTop = 0;
   veil.classList.add('show');
 }
 
