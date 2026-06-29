@@ -980,118 +980,95 @@ function showTransactionDetails(tx) {
 
   const isNeg = tx.amount < 0;
   const typeText = tx.type.toUpperCase().replace(/_/g, ' ');
+  const amountClass = isNeg ? 'negative' : 'positive';
+  const amountSign = isNeg ? '' : '+';
 
-  // Copy button SVG (reusable)
-  const copyIcon = `<svg viewBox="0 0 24 24" fill="none" style="width:14px;height:14px;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+  // Copy button SVG (reusable, smaller and cleaner)
+  const copyIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
 
-  // Build the clean two-column detail rows (matching the reference design)
-  let detailsHtml = `
-    <div class="tx-detail-row">
-      <span class="tx-detail-label">Transaction ID</span>
-      <span class="tx-detail-value">
-        <b style="font-family:var(--font-mono);color:var(--gold-1);">#${tx.id}</b>
-        <button class="tx-copy-btn" data-copy="${tx.id}" aria-label="Copy Transaction ID">${copyIcon}</button>
-      </span>
-    </div>
-    <div class="tx-detail-row">
-      <span class="tx-detail-label">Type</span>
-      <b class="tx-detail-value">${typeText}</b>
-    </div>
-    <div class="tx-detail-row">
-      <span class="tx-detail-label">Amount</span>
-      <b class="tx-detail-value" style="font-family:var(--font-mono);color:${isNeg ? 'var(--ink-mute)' : 'var(--emerald)'};">${isNeg ? '' : '+'}${fmtInt(tx.amount)} ORL</b>
-    </div>
-    <div class="tx-detail-row">
-      <span class="tx-detail-label">Date</span>
-      <b class="tx-detail-value">${new Date(tx.created_at).toLocaleString()}</b>
-    </div>
-    <div class="tx-detail-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
-      <span class="tx-detail-label">Description</span>
-      <div style="font-weight:600;line-height:1.4;color:var(--ink);width:100%;">${tx.description || 'N/A'}</div>
+  // Helper: build a field row (label on top, value below)
+  const field = (label, valueHtml) => `
+    <div class="tx-field">
+      <span class="tx-field-label">${label}</span>
+      <div class="tx-field-value">${valueHtml}</div>
     </div>
   `;
+
+  // Helper: build a field with a copy button
+  const fieldWithCopy = (label, value, copyValue, valueClass = 'id') => `
+    <div class="tx-field">
+      <span class="tx-field-label">${label}</span>
+      <div class="tx-field-value ${valueClass}">
+        <span>${value}</span>
+        <button class="tx-copy-btn" data-copy="${copyValue}" aria-label="Copy ${label}">${copyIcon}</button>
+      </div>
+    </div>
+  `;
+
+  // Build detail fields
+  const amountColor = isNeg ? 'var(--ink)' : 'var(--emerald)';
+  let html = fieldWithCopy('Transaction ID', `#${tx.id}`, tx.id, 'id');
+  html += field('Type', typeText);
+  html += field('Amount', `<span style="color:${amountColor};font-family:var(--font-mono);">${amountSign}${fmtInt(tx.amount)} ORL</span>`);
+  html += field('Date', new Date(tx.created_at).toLocaleString());
+  html += field('Description', tx.description || 'N/A');
 
   // Add withdrawal tracking section for withdrawal transactions
   if (tx.withdrawal_status || tx.withdrawal_id || tx.type === 'withdraw' || tx.type === 'withdraw_completed' || tx.type === 'withdraw_refund') {
     const status = tx.withdrawal_status || 'pending';
     let statusText = 'Processing';
-    let statusColor = 'var(--gold-1)';
+    let badgeClass = 'pending';
     if (status === 'completed') {
-      statusText = 'Completed (Success)';
-      statusColor = 'var(--emerald)';
+      statusText = 'Completed';
+      badgeClass = 'completed';
     } else if (status === 'failed' || status === 'rejected') {
       statusText = 'Failed';
-      statusColor = 'var(--ruby)';
+      badgeClass = 'failed';
     } else if (status === 'needs_approval') {
-      statusText = 'Awaiting Admin Approval';
-      statusColor = 'var(--violet)';
+      statusText = 'Awaiting Approval';
+      badgeClass = 'approval';
     }
 
-    detailsHtml += `
-      <div class="tx-detail-divider"></div>
-      <div class="tx-detail-section-title">Withdrawal Tracking</div>
-      <div class="tx-detail-row">
-        <span class="tx-detail-label">Withdrawal ID</span>
-        <span class="tx-detail-value">
-          <b style="font-family:var(--font-mono);color:var(--ink);">#${tx.withdrawal_id || 'N/A'}</b>
-          ${tx.withdrawal_id ? `<button class="tx-copy-btn" data-copy="${tx.withdrawal_id}" aria-label="Copy Withdrawal ID">${copyIcon}</button>` : ''}
-        </span>
-      </div>
-      <div class="tx-detail-row">
-        <span class="tx-detail-label">Status</span>
-        <b class="tx-detail-value" style="color:${statusColor};">${statusText}</b>
-      </div>
-    `;
+    html += `<div class="tx-section"><div class="tx-section-title">Withdrawal Tracking</div>`;
+
+    if (tx.withdrawal_id) {
+      html += fieldWithCopy('Withdrawal ID', `#${tx.withdrawal_id}`, tx.withdrawal_id, 'mono');
+    }
+    html += field('Status', `<span class="tx-status-badge ${badgeClass}">${statusText}</span>`);
 
     if (tx.flw_reference) {
-      detailsHtml += `
-        <div class="tx-detail-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
-          <span class="tx-detail-label" style="display:flex;justify-content:space-between;width:100%;align-items:center;">
-            <span>Flutterwave Payout Ref</span>
-            <button class="tx-copy-btn" data-copy="${tx.flw_reference}" aria-label="Copy Payout Reference">${copyIcon}</button>
-          </span>
-          <div style="font-family:var(--font-mono);font-size:11.5px;word-break:break-all;font-weight:600;color:var(--gold-1);width:100%;">${tx.flw_reference}</div>
-        </div>
-      `;
+      html += fieldWithCopy('Flutterwave Payout Ref', tx.flw_reference, tx.flw_reference, 'mono');
     }
-
     if (tx.net_fiat) {
-      detailsHtml += `
-        <div class="tx-detail-row">
-          <span class="tx-detail-label">Net Payout Value</span>
-          <b class="tx-detail-value" style="color:var(--emerald);">${tx.net_fiat}</b>
-        </div>
-      `;
+      html += field('Net Payout', `<span style="color:var(--emerald);font-family:var(--font-mono);">${tx.net_fiat}</span>`);
     }
-
     if (tx.fee_orl !== undefined && tx.fee_orl !== null) {
-      detailsHtml += `
-        <div class="tx-detail-row">
-          <span class="tx-detail-label">Processing Fee</span>
-          <b class="tx-detail-value" style="font-family:var(--font-mono);">${fmtInt(tx.fee_orl)} ORL</b>
-        </div>
-      `;
+      html += field('Processing Fee', `${fmtInt(tx.fee_orl)} ORL`, 'mono');
     }
-
     if (tx.wallet_info) {
-      detailsHtml += `
-        <div class="tx-detail-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
-          <span class="tx-detail-label">Payout Destination</span>
-          <div style="font-weight:600;font-size:12px;word-break:break-all;color:var(--ink);width:100%;">${tx.wallet_info.replace(/\|/g, ' • ')}</div>
-        </div>
-      `;
+      // Format the wallet info nicely — split bank|account|name|bankname into lines
+      const parts = tx.wallet_info.split('|');
+      let destHtml;
+      if (parts.length >= 4) {
+        destHtml = `<div style="display:flex;flex-direction:column;gap:2px;">
+          <div>${parts[3]}</div>
+          <div style="font-family:var(--font-mono);font-size:12px;color:var(--ink-mute);">${parts[1]}</div>
+          <div style="font-size:12px;color:var(--ink-mute);">${parts[2]}</div>
+        </div>`;
+      } else {
+        destHtml = tx.wallet_info;
+      }
+      html += field('Payout Destination', destHtml);
     }
 
     if ((status === 'failed' || status === 'rejected') && tx.failure_reason) {
-      detailsHtml += `
-        <div style="margin-top:10px;padding:10px;border-radius:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:var(--ruby);line-height:1.4;font-size:12px;">
-          <b>Failure Reason:</b> ${tx.failure_reason}
-        </div>
-      `;
+      html += `<div class="tx-failure-box"><b>Failure Reason:</b> ${tx.failure_reason}</div>`;
     }
+
+    html += `</div>`; // close .tx-section
   }
 
-  content.innerHTML = detailsHtml;
+  content.innerHTML = html;
 
   // Bind copy events
   content.querySelectorAll('.tx-copy-btn').forEach(btn => {
