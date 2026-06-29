@@ -90,40 +90,59 @@ function animateWheel(prizeIndex, prizeAmount) {
 
   const prizes = econ().WHEEL_PRIZES || [120, 60, 300, 0, 40, 20, 600, 8];
   const seg = 360 / prizes.length;
-  // normalize current rotation to [0,360) so we always spin forward
   const base = wheelRot % 360;
   const landAt = (360 - (prizeIndex * seg + seg / 2)) % 360;
   const delta = (landAt - base + 360) % 360;
-  wheelRot += 360 * 6 + delta;
+  const startRot = wheelRot;
+  const endRot = wheelRot + 360 * 6 + delta;
+  wheelRot = endRot;
 
   const wheelEl = $('wheelModal');
   const closeBtn = $('spinCloseBtn');
   if (closeBtn) closeBtn.style.display = 'none';
 
   if (wheelEl) {
-    // SVG elements need special handling for CSS transitions. Setting
-    // transition + transform in the same frame causes the browser to jump
-    // to the final position with no animation. We need to:
-    // 1. Disable the transition
-    // 2. Force a reflow (getBoundingClientRect works for SVG, offsetWidth doesn't)
-    // 3. In the next frame, re-enable the transition
-    // 4. In the frame after THAT, set the new transform
-    wheelEl.style.transition = 'none';
-    wheelEl.getBoundingClientRect(); // force reflow (works for SVG elements)
+    // Manual requestAnimationFrame animation — the most reliable approach.
+    // CSS transitions and Web Animations API were both getting interfered
+    // with (cancelled or overridden by the 1-second render() interval).
+    // By directly setting style.transform on every frame via rAF, nothing
+    // can cancel or override the animation.
+    //
+    // Custom easing function keeps the wheel visibly rotating across the
+    // FULL 4.6s duration (previous cubic-bezier curves were too
+    // front-loaded, reaching 90%+ rotation in the first second):
+    //   0-25% of time → 45% of rotation  (fast start)
+    //  25-50% of time → 25% of rotation  (medium)
+    //  50-75% of time → 15% of rotation  (slowing)
+    // 75-100% of time → 15% of rotation  (gentle stop)
+    const duration = 4600;
+    const startTime = performance.now();
 
-    requestAnimationFrame(() => {
-      wheelEl.style.transition = 'transform 4.6s cubic-bezier(0.16, 0.92, 0.18, 1)';
-      // Second rAF ensures the browser registers the transition BEFORE
-      // the transform changes, so it actually animates
-      requestAnimationFrame(() => {
-        wheelEl.style.transform = `rotate(${wheelRot}deg)`;
-      });
-    });
+    function easeOut(t) {
+      if (t < 0.25) return (t / 0.25) * 0.45;
+      if (t < 0.50) return 0.45 + ((t - 0.25) / 0.25) * 0.25;
+      if (t < 0.75) return 0.70 + ((t - 0.50) / 0.25) * 0.15;
+      return 0.85 + ((t - 0.75) / 0.25) * 0.15;
+    }
+
+    function frame(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const progress = easeOut(t);
+      const currentRot = startRot + (endRot - startRot) * progress;
+      wheelEl.style.transform = `rotate(${currentRot}deg)`;
+
+      if (t < 1 && spinning) {
+        requestAnimationFrame(frame);
+      } else {
+        wheelEl.style.transform = `rotate(${endRot}deg)`;
+      }
+    }
+    requestAnimationFrame(frame);
   }
 
   setTimeout(() => {
     spinning = false;
-    if (wheelEl) wheelEl.style.transition = '';
     if (closeBtn) closeBtn.style.display = '';
 
     // Restore spin button
