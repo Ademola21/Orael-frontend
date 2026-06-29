@@ -26,9 +26,11 @@ let wheelRot = 0;
 let spinning = false;
 
 /**
- * Build the inline wheel SVG with sapphire+gold segments. Prize values come
- * from the server economy config so the displayed wheel always matches what
- * the server will actually pay. Called on boot.
+ * Build the inline wheel SVG — HD premium realistic design.
+ * Deep navy segments with subtle gradient, brushed gold rim, embossed
+ * prize labels, and metallic divider lines. Prize values come from the
+ * server economy config so the displayed wheel always matches what the
+ * server will actually pay. Called on boot.
  */
 export function buildWheel() {
   const svg = $('wheel');
@@ -37,33 +39,83 @@ export function buildWheel() {
   const prizes = econ().WHEEL_PRIZES || [120, 60, 300, 0, 40, 20, 600, 8];
   const n = prizes.length;
   const seg = 360 / n;
-  const cx = 100, cy = 100, r = 94;
-  const fills = ['#1a2138', '#232b45']; // alternating sapphire shades
+  const cx = 100, cy = 100, r = 92;
+
+  // Deep navy segment colors — alternating for contrast, not too shiny
+  const fills = ['#111827', '#1e293b']; // dark slate → slate
 
   let html = '';
-  // Gold rim
-  html += `<circle cx="${cx}" cy="${cy}" r="${r + 3}" fill="none" stroke="#d97706" stroke-width="3"/>`;
-  html += `<circle cx="${cx}" cy="${cy}" r="${r + 1}" fill="none" stroke="rgba(251,191,36,0.35)" stroke-width="1"/>`;
 
+  // ── Defs: gradients for the metallic gold rim ──────────────────
+  html += `<defs>
+    <linearGradient id="goldRimGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#92400e"/>
+      <stop offset="0.3" stop-color="#fbbf24"/>
+      <stop offset="0.5" stop-color="#fde68a"/>
+      <stop offset="0.7" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#92400e"/>
+    </linearGradient>
+    <radialGradient id="segShine" cx="0.5" cy="0.35" r="0.6">
+      <stop offset="0" stop-color="rgba(255,255,255,0.08)"/>
+      <stop offset="0.7" stop-color="rgba(255,255,255,0)"/>
+      <stop offset="1" stop-color="rgba(0,0,0,0.25)"/>
+    </radialGradient>
+  </defs>`;
+
+  // ── Outer metallic gold rim (thick, brushed) ───────────────────
+  html += `<circle cx="${cx}" cy="${cy}" r="${r + 5}" fill="none" stroke="url(#goldRimGrad)" stroke-width="6"/>`;
+  html += `<circle cx="${cx}" cy="${cy}" r="${r + 2}" fill="none" stroke="rgba(0,0,0,0.4)" stroke-width="1"/>`;
+
+  // ── Segments ───────────────────────────────────────────────────
   for (let i = 0; i < n; i++) {
     const a0 = (i * seg - 90) * Math.PI / 180;
     const a1 = ((i + 1) * seg - 90) * Math.PI / 180;
     const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
     const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
 
-    html += `<path d="M${cx},${cy} L${x0},${y0} A${r},${r} 0 0 1 ${x1},${y1} Z" fill="${fills[i % 2]}" stroke="rgba(251,191,36,0.22)" stroke-width="0.6"/>`;
+    // Segment fill — deep navy, alternating shades
+    html += `<path d="M${cx},${cy} L${x0},${y0} A${r},${r} 0 0 1 ${x1},${y1} Z" fill="${fills[i % 2]}" stroke="rgba(251,191,36,0.15)" stroke-width="0.5"/>`;
+
+    // Subtle radial shine overlay on each segment (3D dome effect)
+    html += `<path d="M${cx},${cy} L${x0},${y0} A${r},${r} 0 0 1 ${x1},${y1} Z" fill="url(#segShine)" pointer-events="none"/>`;
+
+    // Divider line from center to edge (embossed gold)
+    html += `<line x1="${cx}" y1="${cy}" x2="${x0}" y2="${y0}" stroke="rgba(251,191,36,0.2)" stroke-width="0.5"/>`;
 
     // Label
     const am = (a0 + a1) / 2;
-    const tx = cx + r * 0.64 * Math.cos(am);
-    const ty = cy + r * 0.64 * Math.sin(am);
+    const tx = cx + r * 0.62 * Math.cos(am);
+    const ty = cy + r * 0.62 * Math.sin(am);
     const rot = (i * seg) + (seg / 2);
     const big = prizes[i] >= 300;
     const label = prizes[i] === 0 ? 'MISS' : prizes[i];
-    const color = prizes[i] === 0 ? '#94a3b8' : (big ? '#fbbf24' : '#fde68a');
-    const fs = big ? 16 : 13;
-    html += `<text x="${tx}" y="${ty}" fill="${color}" font-size="${fs}" font-family="Space Grotesk" font-weight="700" text-anchor="middle" dominant-baseline="middle" transform="rotate(${rot} ${tx} ${ty})">${label}</text>`;
+
+    // Premium text styling — gold for jackpots, soft amber for regular, muted gray for MISS
+    let color, fontSize, fontWeight;
+    if (prizes[i] === 0) {
+      color = '#64748b'; fontSize = 11; fontWeight = 600;
+    } else if (big) {
+      color = '#fbbf24'; fontSize = 15; fontWeight = 800;
+    } else {
+      color = '#fde68a'; fontSize = 13; fontWeight = 700;
+    }
+
+    html += `<text x="${tx}" y="${ty}" fill="${color}" font-size="${fontSize}" font-family="Space Grotesk" font-weight="${fontWeight}" text-anchor="middle" dominant-baseline="middle" transform="rotate(${rot} ${tx} ${ty})" style="letter-spacing:0.02em">${label}</text>`;
+
+    // Small decorative dot near the outer edge for premium feel
+    const dx = cx + r * 0.87 * Math.cos(am);
+    const dy = cy + r * 0.87 * Math.sin(am);
+    if (prizes[i] >= 100) {
+      html += `<circle cx="${dx}" cy="${dy}" r="1.4" fill="#fbbf24" opacity="0.7"/>`;
+    } else if (prizes[i] > 0) {
+      html += `<circle cx="${dx}" cy="${dy}" r="1" fill="#92400e" opacity="0.5"/>`;
+    }
   }
+
+  // ── Inner ring (dark recess between segments and hub) ──────────
+  html += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="2"/>`;
+  html += `<circle cx="${cx}" cy="${cy}" r="${r - 1}" fill="none" stroke="rgba(251,191,36,0.12)" stroke-width="0.5"/>`;
+
   svg.innerHTML = html;
 
   // Build the gold stud bezel ring (16 dots) on the inline wheel

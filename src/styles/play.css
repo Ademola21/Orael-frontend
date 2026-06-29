@@ -11,59 +11,59 @@
 }
 
 /* =========================================================================
-   LUCKY SPIN WHEEL (inline — no fullscreen modal)
+   LUCKY SPIN WHEEL (inline — HD premium realistic, no fullscreen modal)
    ========================================================================= */
 .wheel-wrap { display: flex; flex-direction: column; align-items: center; padding: 8px 0 4px; }
 .wheel-stage {
   position: relative; width: 280px; height: 280px; margin-bottom: 18px;
   display: grid; place-items: center;
 }
-/* Outer glow ring */
+/* Subtle ambient shadow (not a shiny glow) */
 .wheel-stage::before {
-  content: ""; position: absolute; inset: -10px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(251, 191, 36, 0.18), transparent 65%);
-  filter: blur(6px); z-index: 0;
+  content: ""; position: absolute; inset: -8px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.3), transparent 65%);
+  filter: blur(8px); z-index: 0;
 }
 .wheel {
   position: relative; z-index: 1;
   width: 100%; height: 100%; border-radius: 50%;
   /* No CSS transition — animation handled by requestAnimationFrame in play.js */
-  filter: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.55));
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
 }
-/* Decorative stud ring around the wheel (gold dots) */
+/* Decorative stud ring around the wheel (matte gold dots, not glowing) */
 .wheel-bezel {
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   border-radius: 50%;
 }
 .wheel-bezel i {
-  position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; margin: -2.5px;
-  border-radius: 50%; background: var(--gold-1);
-  box-shadow: 0 0 6px rgba(251, 191, 36, 0.7);
+  position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; margin: -2px;
+  border-radius: 50%; background: #d97706;
+  box-shadow: 0 0 3px rgba(217, 119, 6, 0.4);
 }
 .wheel-pointer {
-  position: absolute; top: -8px; left: 50%; transform: translateX(-50%); z-index: 4;
-  width: 26px; height: 34px;
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6));
+  position: absolute; top: -6px; left: 50%; transform: translateX(-50%); z-index: 4;
+  width: 24px; height: 32px;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
 }
 .wheel-pointer svg { width: 100%; height: 100%; }
 .wheel-hub {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3;
-  width: 68px; height: 68px; border-radius: 50%;
-  background: radial-gradient(circle at 38% 32%, #2a3450, #0c1018);
-  border: 2px solid var(--gold-2); display: grid; place-items: center;
-  font-family: var(--font-display); font-weight: 700; font-size: 12px; color: var(--gold-1);
-  letter-spacing: 0.08em; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+  width: 64px; height: 64px; border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #1e293b, #0f172a);
+  border: 2px solid #92400e; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 11px; color: #fbbf24;
+  letter-spacing: 0.08em; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.04);
   cursor: pointer; user-select: none;
   transition: transform 0.15s, box-shadow 0.15s;
 }
 .wheel-hub:hover {
   transform: translate(-50%, -50%) scale(1.05);
-  box-shadow: 0 6px 20px rgba(251, 191, 36, 0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.25), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 .wheel-hub:active { transform: translate(-50%, -50%) scale(0.96); }
 .wheel-hub::after {
   content: ""; position: absolute; inset: 4px; border-radius: 50%;
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  border: 1px solid rgba(217, 119, 6, 0.25);
   pointer-events: none;
 }
 
