@@ -63,14 +63,17 @@ export const ECONOMY = {
     usdt:    { name: 'USDT (TRC20)', minOrl: 720, fiat: '$2.00', countries: 'all', icon: 'crypto' },
   },
   TASKS: [
-    { id: 't1', title: 'Watch a sponsored video', sub: '15s · rewarded ad', reward: 40, url: '' },
-    { id: 't2', title: 'Visit partner offer',     sub: 'Open link · 10s',  reward: 35, url: '' },
-    { id: 't3', title: 'Daily quiz',              sub: 'Answer 1 question', reward: 35, url: '' },
+    { id: 't1', title: 'Follow Orael on X',         sub: 'Tap follow · earn 40 ORL',    reward: 40, url: 'https://x.com/Orael_Network' },
+    { id: 't2', title: 'Join Orael Telegram',       sub: 'Open & start the bot',         reward: 40, url: 'https://t.me/Orael_bot' },
+    { id: 't3', title: 'Subscribe YouTube',         sub: 'Watch & subscribe',            reward: 40, url: 'https://youtube.com/@Orael' },
+    { id: 't4', title: 'Follow on Instagram',       sub: 'Tap follow',                   reward: 35, url: 'https://instagram.com/Orael' },
+    { id: 't5', title: 'Join Discord server',       sub: 'Connect with the community',   reward: 35, url: 'https://discord.gg/Orael' },
+    { id: 't6', title: 'Follow on TikTok',          sub: 'Tap follow',                   reward: 35, url: 'https://tiktok.com/@Orael' },
   ],
   FEATURED_TASKS: [
-    { id: 'f1', title: 'Join Orael Bot',          sub: 'Open & start the bot', reward: 40, url: 'https://t.me/Orael_bot' },
-    { id: 'f2', title: 'Follow Orael on X',        sub: 'Tap follow',           reward: 40, url: 'https://x.com/Orael_Network' },
-    { id: 'f3', title: 'Subscribe Orael channel',  sub: 'Telegram',             reward: 40, url: 'https://t.me/Orael_Channel' },
+    { id: 'f1', title: 'Partner: Binance',          sub: 'Sign up & trade',              reward: 100, url: 'https://binance.com' },
+    { id: 'f2', title: 'Partner: Yellow Card',      sub: 'Buy crypto in Africa',         reward: 80,  url: 'https://yellowcard.io' },
+    { id: 'f3', title: 'Partner: Flutterwave',      sub: 'Send & receive money',         reward: 80,  url: 'https://flutterwave.com' },
   ],
   PRO_PRICE_STARS: 250,
   PRO_DURATION_DAYS: 30,
@@ -623,7 +626,13 @@ export async function api(path, options = {}) {
       const min = minMap[methodKey] || 40;
       if (M.balance < min) throw new Error(`Minimum is ${min} ORL`);
 
-      const feePct = isPro() ? ECONOMY.WITHDRAWAL_FEE_PRO_PCT : ECONOMY.WITHDRAWAL_FEE_PCT;
+      // Airtime is free — no network fee. Bank and USDT have standard fees.
+      let feePct;
+      if (methodKey === 'airtime') {
+        feePct = 0; // free
+      } else {
+        feePct = isPro() ? ECONOMY.WITHDRAWAL_FEE_PRO_PCT : ECONOMY.WITHDRAWAL_FEE_PCT;
+      }
       const fee = Math.floor(M.balance * feePct);
       const net = M.balance - fee;
 

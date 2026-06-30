@@ -134,3 +134,6 @@
    TIER MODAL (existing — updated for new design)
    ========================================================================= */
 .modal-veil .tier-row { transition: all 0.2s; }
+
+/* Tier modal — higher z-index so it opens above profile overlay */
+#tierVeil { z-index: 75; }

@@ -348,11 +348,13 @@ export function setupTierModal() {
     });
   }
 
-  // Profile → open tier progression modal
+  // Profile → open tier progression modal (close profile first so tier modal is on top)
   if (viewTiersBtn && tierVeil) {
     viewTiersBtn.addEventListener('click', () => {
       const S = getState();
       updateTierModalProgress(S);
+      // Close profile overlay so tier modal is fully visible
+      if (profileVeil) profileVeil.classList.remove('show');
       tierVeil.classList.add('show');
       haptic('light');
     });
@@ -851,7 +853,8 @@ export function render() {
   if (wProgLabelEl) wProgLabelEl.textContent = `${fmtInt(effectiveBalance)} / ${fmtInt(selectedMin)} ORL`;
 
   const can = effectiveBalance >= selectedMin;
-  const feePctVal = isPro(S) ? 5 : 10;
+  // Airtime is free (0% fee). Bank and USDT use standard fees.
+  const feePctVal = selectedKey === 'airtime' ? 0 : (isPro(S) ? 5 : 10);
   const amountInputEl = $('withdrawAmountInput');
   const toggleBtn = $('withdrawUnitToggle');
   const amountLabel = $('withdrawAmountLabel');
